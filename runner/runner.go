@@ -106,33 +106,36 @@ func (r *Runner) Execute() {
 
 // processEvent handles individual test events and formats the console output based on the action.
 func (r *Runner) processEvent(e TestEvent) {
-	if e.Test == "" {
-		if e.Action == "fail" {
-			fmt.Printf("\n%s %s %s\n", iconFailPkg, translate(r.lang, "pkg_fail"), e.Package)
-		}
-		return
-	}
+    if e.Test == "" {
+        if e.Action == "fail" {
+            fmt.Printf("\n%s %s %s\n", iconFailPkg, translate(r.lang, "pkg_fail"), e.Package)
+        }
+        return
+    }
 
-	switch e.Action {
-	case "output":
-		text := e.Output
-		if strings.HasPrefix(text, "=== RUN") ||
-			strings.HasPrefix(text, "--- PASS") ||
-			strings.HasPrefix(text, "--- FAIL") {
-			return
-		}
+    switch e.Action {
+    case "output":
+        text := e.Output
+    
+        trimmedText := strings.TrimSpace(text)
+        
+        if strings.HasPrefix(trimmedText, "=== RUN") ||
+            strings.HasPrefix(trimmedText, "--- PASS") ||
+            strings.HasPrefix(trimmedText, "--- FAIL") {
+            return
+        }
 
-		fmt.Print(strings.TrimRight(text, "\n"))
-		fmt.Println()
+        fmt.Print(strings.TrimRight(text, "\n"))
+        fmt.Println()
 
-	case "pass":
-		fmt.Printf("\n%s %s %s (%.2fs)\n", iconPass, translate(r.lang, "success"), e.Test, e.Elapsed)
-		fmt.Println("--------------------------------------------------")
+    case "pass":
+        fmt.Printf("\n%s %s %s (%.2fs)\n", iconPass, translate(r.lang, "success"), e.Test, e.Elapsed)
+        fmt.Println("--------------------------------------------------")
 
-	case "fail":
-		fmt.Printf("\n%s %s %s (%.2fs)\n", iconFail, translate(r.lang, "fail"), e.Test, e.Elapsed)
-		fmt.Println("--------------------------------------------------")
-	}
+    case "fail":
+        fmt.Printf("\n%s %s %s (%.2fs)\n", iconFail, translate(r.lang, "fail"), e.Test, e.Elapsed)
+        fmt.Println("--------------------------------------------------")
+    }
 }
 
 // translate is an internal helper function that fetches the localized text.
