@@ -60,6 +60,21 @@ func TestAssertions_Success(t *testing.T) {
 		NotEmpty(a, 42)
 		NotEmpty(a, "texto")
 	})
+
+	t.Run("LengthSlice", func(t *testing.T) {
+		slice := []int{1, 2, 3}
+		LengthSlice(a, 3, slice)
+	})
+
+	t.Run("LengthMap", func(t *testing.T) {
+		m := map[string]int{"a": 1, "b": 2}
+		LengthMap(a, 2, m)
+	})
+
+	t.Run("LengthString", func(t *testing.T) {
+		str := "golang"
+		LengthString(a, 6, str)
+	})
 }
 
 func TestAssertions_Failures(t *testing.T) {
@@ -121,6 +136,33 @@ func TestAssertions_Failures(t *testing.T) {
 		NotEmpty(a, "")
 		if !mockT.errorfCalled {
 			t.Fatal("Esperava que NotEmpty chamasse Errorf")
+		}
+	})
+
+	t.Run("LengthSlice fail", func(t *testing.T) {
+		a, mockT := newMockAssert(langs.EN_US)
+		slice := []int{1, 2, 3}
+		LengthSlice(a, 5, slice)
+		if !mockT.errorfCalled {
+			t.Fatal("Esperava que LengthSlice chamasse Errorf")
+		}
+	})
+
+	t.Run("LengthMap fail", func(t *testing.T) {
+		a, mockT := newMockAssert(langs.EN_US)
+		m := map[string]int{"a": 1, "b": 2}
+		LengthMap(a, 5, m)
+		if !mockT.errorfCalled {
+			t.Fatal("Esperava que LengthMap chamasse Errorf")
+		}
+	})
+
+	t.Run("LengthString fail", func(t *testing.T) {
+		a, mockT := newMockAssert(langs.EN_US)
+		str := "golang"
+		LengthString(a, 10, str)
+		if !mockT.errorfCalled {
+			t.Fatal("Esperava que LengthString chamasse Errorf")
 		}
 	})
 }

@@ -31,8 +31,8 @@ var translations = map[langs.Lang]map[string]string{
 		"succ_match":    "SUCCESS",
 		"fail_true":     "FAIL: Expected true, got false",
 		"succ_true":     "SUCCESS: Value is true",
-		"fail_false":    "FAIL: Expected false, got true", 
-        "succ_false":    "SUCCESS: Value is false",        
+		"fail_false":    "FAIL: Expected false, got true",
+		"succ_false":    "SUCCESS: Value is false",
 		"fail_err":      "FAIL: Unexpected error encountered",
 		"err":           "Error:",
 		"succ_err":      "SUCCESS: No error returned",
@@ -42,6 +42,8 @@ var translations = map[langs.Lang]map[string]string{
 		"succ_empty":    "SUCCESS: Value is empty",
 		"fail_notempty": "FAIL: Expected value not to be empty",
 		"succ_notempty": "SUCCESS: Value is not empty:",
+		"fail_length":   "FAIL: Unexpected length",
+		"succ_length":   "SUCCESS: Length matches expected value",
 		"msg":           "Message:",
 	},
 	langs.PT_BR: {
@@ -51,8 +53,8 @@ var translations = map[langs.Lang]map[string]string{
 		"succ_match":    "SUCESSO",
 		"fail_true":     "FALHA: Esperava true, obteve false",
 		"succ_true":     "SUCESSO: O valor é true",
-		"fail_false":    "FALHA: Esperava false, obteve true", 
-        "succ_false":    "SUCESSO: O valor é false",           
+		"fail_false":    "FALHA: Esperava false, obteve true",
+		"succ_false":    "SUCESSO: O valor é false",
 		"fail_err":      "FALHA: Erro inesperado encontrado",
 		"err":           "Erro:",
 		"succ_err":      "SUCESSO: Nenhum erro retornado",
@@ -62,6 +64,8 @@ var translations = map[langs.Lang]map[string]string{
 		"succ_empty":    "SUCESSO: O valor está vazio",
 		"fail_notempty": "FALHA: Esperava que o valor não fosse vazio",
 		"succ_notempty": "SUCESSO: O valor não está vazio:",
+		"fail_length":   "FALHA: Tamanho inesperado",
+		"succ_length":   "SUCESSO: Tamanho corresponde ao esperado",
 		"msg":           "Mensagem:",
 	},
 }
@@ -118,14 +122,14 @@ func True(a *Assert, actual bool, msg ...string) {
 
 // False verifies if the provided boolean value is false.
 func False(a *Assert, actual bool, msg ...string) {
-    a.t.Helper()
+	a.t.Helper()
 
-    if actual {
-        m := formatMessage(a, msg)
-        a.t.Errorf("\n%s %s%s\n", iconFail, translate(a, "fail_false"), m)
-    } else {
-        a.t.Logf("%s %s", iconPass, translate(a, "succ_false"))
-    }
+	if actual {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s%s\n", iconFail, translate(a, "fail_false"), m)
+	} else {
+		a.t.Logf("%s %s", iconPass, translate(a, "succ_false"))
+	}
 }
 
 // NoError fails the test if the error interface is not nil.
@@ -177,6 +181,50 @@ func NotEmpty[T comparable](a *Assert, actual T, msg ...string) {
 		a.t.Errorf("\n%s %s%s\n", iconFail, translate(a, "fail_notempty"), m)
 	} else {
 		a.t.Logf("%s %s %#v", iconPass, translate(a, "succ_notempty"), actual)
+	}
+}
+
+// LengthSlice verifies if the length of the provided slice matches the expected length.
+// By using type constraints (~[]E), it enforces compile-time checks and avoids reflection.
+func LengthSlice[S ~[]E, E any](a *Assert, expected int, actual S, msg ...string) {
+	a.t.Helper()
+
+	actualLen := len(actual)
+	if actualLen != expected {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s%s\n\t%s %s %d\n\t%s %s %d\n",
+			iconFail, translate(a, "fail_length"), m, iconWant, translate(a, "expected"), expected, iconGot, translate(a, "got"), actualLen)
+	} else {
+		a.t.Logf("%s %s: len() == %d", iconPass, translate(a, "succ_length"), expected)
+	}
+}
+
+// LengthMap verifies if the length of the provided map matches the expected length.
+// By using type constraints (~map[K]V), it enforces compile-time checks and avoids reflection.
+func LengthMap[M ~map[K]V, K comparable, V any](a *Assert, expected int, actual M, msg ...string) {
+	a.t.Helper()
+
+	actualLen := len(actual)
+	if actualLen != expected {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s%s\n\t%s %s %d\n\t%s %s %d\n",
+			iconFail, translate(a, "fail_length"), m, iconWant, translate(a, "expected"), expected, iconGot, translate(a, "got"), actualLen)
+	} else {
+		a.t.Logf("%s %s: len() == %d", iconPass, translate(a, "succ_length"), expected)
+	}
+}
+
+// LengthString verifies if the length of the provided string matches the expected length.
+func LengthString[S ~string](a *Assert, expected int, actual S, msg ...string) {
+	a.t.Helper()
+
+	actualLen := len(actual)
+	if actualLen != expected {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s%s\n\t%s %s %d\n\t%s %s %d\n",
+			iconFail, translate(a, "fail_length"), m, iconWant, translate(a, "expected"), expected, iconGot, translate(a, "got"), actualLen)
+	} else {
+		a.t.Logf("%s %s: len() == %d", iconPass, translate(a, "succ_length"), expected)
 	}
 }
 
