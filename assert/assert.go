@@ -1,0 +1,184 @@
+// Package assert provides high-performance assertion functions for Go tests.
+//
+// Instead of using reflection (reflect), this package takes advantage of Generics
+// ([T comparable]) to perform compile-time comparisons, ensuring zero heap allocations
+// (zero-allocation) and maximum performance.
+package assert
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/atendi9/capivara/langs"
+)
+
+const (
+	iconPass  = "✅"
+	iconFail  = "❌"
+	iconGot   = "🔍"
+	iconWant  = "🎯"
+	iconError = "🔥"
+	iconMsg   = "💬"
+)
+
+// translations is the internal dictionary that maps error messages
+// according to the configured language.
+var translations = map[langs.Lang]map[string]string{
+	langs.EN_US: {
+		"fail_match":    "FAIL: Values do not match",
+		"expected":      "Expected:",
+		"got":           "Got:     ",
+		"succ_match":    "SUCCESS",
+		"fail_true":     "FAIL: Expected true, got false",
+		"succ_true":     "SUCCESS: Value is true",
+		"fail_err":      "FAIL: Unexpected error encountered",
+		"err":           "Error:",
+		"succ_err":      "SUCCESS: No error returned",
+		"fail_notnil":   "FAIL: Value should not be nil",
+		"succ_notnil":   "SUCCESS: Value is not nil",
+		"fail_empty":    "FAIL: Expected value to be empty, but it was:",
+		"succ_empty":    "SUCCESS: Value is empty",
+		"fail_notempty": "FAIL: Expected value not to be empty",
+		"succ_notempty": "SUCCESS: Value is not empty:",
+		"msg":           "Message:",
+	},
+	langs.PT_BR: {
+		"fail_match":    "FALHA: Os valores não correspondem",
+		"expected":      "Esperado:",
+		"got":           "Obtido:  ",
+		"succ_match":    "SUCESSO",
+		"fail_true":     "FALHA: Esperava true, obteve false",
+		"succ_true":     "SUCESSO: O valor é true",
+		"fail_err":      "FALHA: Erro inesperado encontrado",
+		"err":           "Erro:",
+		"succ_err":      "SUCESSO: Nenhum erro retornado",
+		"fail_notnil":   "FALHA: O valor não deve ser nil",
+		"succ_notnil":   "SUCESSO: O valor não é nil",
+		"fail_empty":    "FALHA: Esperava que o valor fosse vazio, mas foi:",
+		"succ_empty":    "SUCESSO: O valor está vazio",
+		"fail_notempty": "FALHA: Esperava que o valor não fosse vazio",
+		"succ_notempty": "SUCESSO: O valor não está vazio:",
+		"msg":           "Mensagem:",
+	},
+}
+
+// Assert holds the state of the current test context, including
+// the preferred language for messages and the underlying test interface.
+type Assert struct {
+	Lang langs.Lang
+	t    testing.TB // Kept private to prevent unwanted mutations
+}
+
+// New initializes a new assertion context instance.
+// The testing.TB interface allows it to be used with both *testing.T, *testing.B and *testing.F.
+//
+// Usage example:
+//
+//	func TestSomething(t *testing.T) {
+//		a := assert.New(langs.EN_US, t)
+//		assert.Equal(a, "golang", "golang", "strings should be equal")
+//	}
+func New(lang langs.Lang, t testing.TB) *Assert {
+	return &Assert{
+		Lang: lang,
+		t:    t,
+	}
+}
+
+// Equal verifies if two values are deeply equal.
+// It uses Generics [T comparable] to ensure fast compile-time checking,
+// rejecting invalid types (like slices or maps) without causing a panic.
+func Equal[T comparable](a *Assert, expected, actual T, msg ...string) {
+	a.t.Helper()
+
+	if expected != actual {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s%s\n\t%s %s %#v\n\t%s %s %#v\n",
+			iconFail, translate(a, "fail_match"), m, iconWant, translate(a, "expected"), expected, iconGot, translate(a, "got"), actual)
+	} else {
+		a.t.Logf("%s %s: %#v == %#v", iconPass, translate(a, "succ_match"), expected, actual)
+	}
+}
+
+// True verifies if the provided boolean value is true.
+func True(a *Assert, actual bool, msg ...string) {
+	a.t.Helper()
+
+	if !actual {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s%s\n", iconFail, translate(a, "fail_true"), m)
+	} else {
+		a.t.Logf("%s %s", iconPass, translate(a, "succ_true"))
+	}
+}
+
+// NoError fails the test if the error interface is not nil.
+func NoError(a *Assert, err error, msg ...string) {
+	a.t.Helper()
+
+	if err != nil {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s%s\n\t%s %s %v\n", iconError, translate(a, "fail_err"), m, iconGot, translate(a, "err"), err)
+	} else {
+		a.t.Logf("%s %s", iconPass, translate(a, "succ_err"))
+	}
+}
+
+// NotNil strictly verifies if an interface is not nil.
+// Note: Due to the absence of reflect, it does not inspect "typed nils", focusing on absolute performance.
+func NotNil(a *Assert, actual any, msg ...string) {
+	a.t.Helper()
+
+	if actual == nil {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s%s\n", iconFail, translate(a, "fail_notnil"), m)
+	} else {
+		a.t.Logf("%s %s", iconPass, translate(a, "succ_notnil"))
+	}
+}
+
+// Empty verifies if the provided value matches the "zero-value" of its type
+// (e.g., 0 for integers, "" for strings, false for booleans).
+func Empty[T comparable](a *Assert, actual T, msg ...string) {
+	a.t.Helper()
+	var zero T // Implicitly instantiates the native zero-value for type T
+
+	if actual != zero {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s %#v%s\n", iconFail, translate(a, "fail_empty"), actual, m)
+	} else {
+		a.t.Logf("%s %s", iconPass, translate(a, "succ_empty"))
+	}
+}
+
+// NotEmpty verifies if the provided value is different from the "zero-value" of its respective type.
+func NotEmpty[T comparable](a *Assert, actual T, msg ...string) {
+	a.t.Helper()
+	var zero T
+
+	if actual == zero {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s%s\n", iconFail, translate(a, "fail_notempty"), m)
+	} else {
+		a.t.Logf("%s %s %#v", iconPass, translate(a, "succ_notempty"), actual)
+	}
+}
+
+// translate is an internal helper function that fetches the localized text.
+func translate(a *Assert, key string) string {
+	if langMap, ok := translations[a.Lang]; ok {
+		if msg, exists := langMap[key]; exists {
+			return msg
+		}
+	}
+	// Safety fallback to English
+	return translations[langs.EN_US][key]
+}
+
+// formatMessage is an internal helper function to format the custom additional message.
+func formatMessage(a *Assert, msg []string) string {
+	if len(msg) > 0 {
+		return fmt.Sprintf("\n\t%s %s %s", iconMsg, translate(a, "msg"), msg[0])
+	}
+	return ""
+}
