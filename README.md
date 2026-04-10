@@ -41,4 +41,28 @@ If you prefer to see the test results and error messages in Portuguese, you can 
 capivara --lang=portuguese ./...
 ```
 
+### 🇷🇺 Russian Output
+
+If you prefer to see the test results and error messages in Russian, you can use the `--lang=russian` flag:
+
+```bash
+capivara --lang=russian ./...
+```
+
+### 🇯🇵 Japanese Output
+
+If you prefer to see the test results and error messages in Japanese, you can use the `--lang=japanese` flag:
+
+```bash
+capivara --lang=japanese ./...
+```
+
+### 🇨🇳 Chinese Output
+
+If you prefer to see the test results and error messages in Chinese, you can use the `--lang=chinese` flag:
+
+```bash
+capivara --lang=chinese ./...
+```
+
 *(Any standard `go test` flags can still be passed alongside it!)*
