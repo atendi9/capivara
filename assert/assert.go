@@ -31,6 +31,8 @@ var translations = map[langs.Lang]map[string]string{
 		"succ_match":    "SUCCESS",
 		"fail_true":     "FAIL: Expected true, got false",
 		"succ_true":     "SUCCESS: Value is true",
+		"fail_false":    "FAIL: Expected false, got true", 
+        "succ_false":    "SUCCESS: Value is false",        
 		"fail_err":      "FAIL: Unexpected error encountered",
 		"err":           "Error:",
 		"succ_err":      "SUCCESS: No error returned",
@@ -49,6 +51,8 @@ var translations = map[langs.Lang]map[string]string{
 		"succ_match":    "SUCESSO",
 		"fail_true":     "FALHA: Esperava true, obteve false",
 		"succ_true":     "SUCESSO: O valor é true",
+		"fail_false":    "FALHA: Esperava false, obteve true", 
+        "succ_false":    "SUCESSO: O valor é false",           
 		"fail_err":      "FALHA: Erro inesperado encontrado",
 		"err":           "Erro:",
 		"succ_err":      "SUCESSO: Nenhum erro retornado",
@@ -110,6 +114,18 @@ func True(a *Assert, actual bool, msg ...string) {
 	} else {
 		a.t.Logf("%s %s", iconPass, translate(a, "succ_true"))
 	}
+}
+
+// False verifies if the provided boolean value is false.
+func False(a *Assert, actual bool, msg ...string) {
+    a.t.Helper()
+
+    if actual {
+        m := formatMessage(a, msg)
+        a.t.Errorf("\n%s %s%s\n", iconFail, translate(a, "fail_false"), m)
+    } else {
+        a.t.Logf("%s %s", iconPass, translate(a, "succ_false"))
+    }
 }
 
 // NoError fails the test if the error interface is not nil.

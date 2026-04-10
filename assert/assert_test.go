@@ -38,6 +38,10 @@ func TestAssertions_Success(t *testing.T) {
 		True(a, true)
 	})
 
+	t.Run("False", func(t *testing.T) {
+		False(a, false)
+	})
+
 	t.Run("NoError", func(t *testing.T) {
 		NoError(a, nil)
 	})
@@ -77,6 +81,14 @@ func TestAssertions_Failures(t *testing.T) {
 		True(a, false)
 		if !mockT.errorfCalled {
 			t.Fatal("Esperava que True chamasse Errorf")
+		}
+	})
+
+	t.Run("False fail", func(t *testing.T) {
+		a, mockT := newMockAssert(langs.EN_US)
+		False(a, true)
+		if !mockT.errorfCalled {
+			t.Fatal("Esperava que False chamasse Errorf")
 		}
 	})
 
