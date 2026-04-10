@@ -11,8 +11,12 @@ on:
 
 jobs:
   test:
-    name: Test on Go 1.26.1
-    runs-on: ubuntu-latest
+    name: Test on Go 1.26.1 (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - name: Checkout code
@@ -24,5 +28,17 @@ jobs:
           go-version: '1.26.1'
           cache: true 
 
-      - name: Run tests
-        run: go test -v ./...
+      - name: Install Capivara (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          curl -fsSL https://raw.githubusercontent.com/atendi9/capivara/main/install.sh | bash
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Capivara (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          Invoke-RestMethod -Uri https://raw.githubusercontent.com/atendi9/capivara/main/install.ps1 | Invoke-Expression
+          echo "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Append -Encoding utf8
+
+      - name: Run tests with Capivara
+        run: capivara ./...
