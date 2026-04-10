@@ -46,6 +46,16 @@ func TestAssertions_Success(t *testing.T) {
 		NoError(a, nil)
 	})
 
+	t.Run("Error", func(t *testing.T) {
+		Error(a, errors.New("erro esperado"))
+	})
+
+	t.Run("ErrorIs", func(t *testing.T) {
+		targetErr := errors.New("erro alvo")
+		wrappedErr := fmt.Errorf("embrulhando o erro: %w", targetErr)
+		ErrorIs(a, wrappedErr, targetErr)
+	})
+
 	t.Run("NotNil", func(t *testing.T) {
 		NotNil(a, "não sou nulo")
 	})
@@ -112,6 +122,24 @@ func TestAssertions_Failures(t *testing.T) {
 		NoError(a, errors.New("erro forçado"))
 		if !mockT.errorfCalled {
 			t.Fatal("Esperava que NoError chamasse Errorf")
+		}
+	})
+
+	t.Run("Error fail", func(t *testing.T) {
+		a, mockT := newMockAssert(langs.EN_US)
+		Error(a, nil)
+		if !mockT.errorfCalled {
+			t.Fatal("Esperava que Error chamasse Errorf")
+		}
+	})
+
+	t.Run("ErrorIs fail", func(t *testing.T) {
+		a, mockT := newMockAssert(langs.EN_US)
+		targetErr := errors.New("erro alvo")
+		otherErr := errors.New("erro diferente")
+		ErrorIs(a, otherErr, targetErr)
+		if !mockT.errorfCalled {
+			t.Fatal("Esperava que ErrorIs chamasse Errorf")
 		}
 	})
 

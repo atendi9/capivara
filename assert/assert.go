@@ -6,6 +6,7 @@
 package assert
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -25,48 +26,58 @@ const (
 // according to the configured language.
 var translations = map[langs.Lang]map[string]string{
 	langs.EN_US: {
-		"fail_match":    "FAIL: Values do not match",
-		"expected":      "Expected:",
-		"got":           "Got:     ",
-		"succ_match":    "SUCCESS",
-		"fail_true":     "FAIL: Expected true, got false",
-		"succ_true":     "SUCCESS: Value is true",
-		"fail_false":    "FAIL: Expected false, got true",
-		"succ_false":    "SUCCESS: Value is false",
-		"fail_err":      "FAIL: Unexpected error encountered",
-		"err":           "Error:",
-		"succ_err":      "SUCCESS: No error returned",
-		"fail_notnil":   "FAIL: Value should not be nil",
-		"succ_notnil":   "SUCCESS: Value is not nil",
-		"fail_empty":    "FAIL: Expected value to be empty, but it was:",
-		"succ_empty":    "SUCCESS: Value is empty",
-		"fail_notempty": "FAIL: Expected value not to be empty",
-		"succ_notempty": "SUCCESS: Value is not empty:",
-		"fail_length":   "FAIL: Unexpected length",
-		"succ_length":   "SUCCESS: Length matches expected value",
-		"msg":           "Message:",
+		"fail_match":        "FAIL: Values do not match",
+		"expected":          "Expected:",
+		"got":               "Got:     ",
+		"succ_match":        "SUCCESS",
+		"fail_true":         "FAIL: Expected true, got false",
+		"succ_true":         "SUCCESS: Value is true",
+		"fail_false":        "FAIL: Expected false, got true",
+		"succ_false":        "SUCCESS: Value is false",
+		"fail_err":          "FAIL: Unexpected error encountered",
+		"err":               "Error:",
+		"succ_err":          "SUCCESS: No error returned",
+		"fail_expected_err": "FAIL: Expected an error, got nil",
+		"succ_expected_err": "SUCCESS: Error encountered as expected",
+		"fail_err_is":       "FAIL: Error does not match the expected target",
+		"succ_err_is":       "SUCCESS: Error matches target",
+		"target":            "Target:  ",
+		"fail_notnil":       "FAIL: Value should not be nil",
+		"succ_notnil":       "SUCCESS: Value is not nil",
+		"fail_empty":        "FAIL: Expected value to be empty, but it was:",
+		"succ_empty":        "SUCCESS: Value is empty",
+		"fail_notempty":     "FAIL: Expected value not to be empty",
+		"succ_notempty":     "SUCCESS: Value is not empty:",
+		"fail_length":       "FAIL: Unexpected length",
+		"succ_length":       "SUCCESS: Length matches expected value",
+		"msg":               "Message:",
 	},
 	langs.PT_BR: {
-		"fail_match":    "FALHA: Os valores não correspondem",
-		"expected":      "Esperado:",
-		"got":           "Obtido:  ",
-		"succ_match":    "SUCESSO",
-		"fail_true":     "FALHA: Esperava true, obteve false",
-		"succ_true":     "SUCESSO: O valor é true",
-		"fail_false":    "FALHA: Esperava false, obteve true",
-		"succ_false":    "SUCESSO: O valor é false",
-		"fail_err":      "FALHA: Erro inesperado encontrado",
-		"err":           "Erro:",
-		"succ_err":      "SUCESSO: Nenhum erro retornado",
-		"fail_notnil":   "FALHA: O valor não deve ser nil",
-		"succ_notnil":   "SUCESSO: O valor não é nil",
-		"fail_empty":    "FALHA: Esperava que o valor fosse vazio, mas foi:",
-		"succ_empty":    "SUCESSO: O valor está vazio",
-		"fail_notempty": "FALHA: Esperava que o valor não fosse vazio",
-		"succ_notempty": "SUCESSO: O valor não está vazio:",
-		"fail_length":   "FALHA: Tamanho inesperado",
-		"succ_length":   "SUCESSO: Tamanho corresponde ao esperado",
-		"msg":           "Mensagem:",
+		"fail_match":        "FALHA: Os valores não correspondem",
+		"expected":          "Esperado:",
+		"got":               "Obtido:  ",
+		"succ_match":        "SUCESSO",
+		"fail_true":         "FALHA: Esperava true, obteve false",
+		"succ_true":         "SUCESSO: O valor é true",
+		"fail_false":        "FALHA: Esperava false, obteve true",
+		"succ_false":        "SUCESSO: O valor é false",
+		"fail_err":          "FALHA: Erro inesperado encontrado",
+		"err":               "Erro:",
+		"succ_err":          "SUCESSO: Nenhum erro retornado",
+		"fail_expected_err": "FALHA: Esperava um erro, obteve nil",
+		"succ_expected_err": "SUCESSO: Erro encontrado conforme esperado",
+		"fail_err_is":       "FALHA: O erro não corresponde ao alvo esperado",
+		"succ_err_is":       "SUCESSO: O erro corresponde ao alvo",
+		"target":            "Alvo:    ",
+		"fail_notnil":       "FALHA: O valor não deve ser nil",
+		"succ_notnil":       "SUCESSO: O valor não é nil",
+		"fail_empty":        "FALHA: Esperava que o valor fosse vazio, mas foi:",
+		"succ_empty":        "SUCESSO: O valor está vazio",
+		"fail_notempty":     "FALHA: Esperava que o valor não fosse vazio",
+		"succ_notempty":     "SUCESSO: O valor não está vazio:",
+		"fail_length":       "FALHA: Tamanho inesperado",
+		"succ_length":       "SUCESSO: Tamanho corresponde ao esperado",
+		"msg":               "Mensagem:",
 	},
 }
 
@@ -83,8 +94,8 @@ type Assert struct {
 // Usage example:
 //
 //	func TestSomething(t *testing.T) {
-//		a := assert.New(langs.EN_US, t)
-//		assert.Equal(a, "golang", "golang", "strings should be equal")
+//	    a := assert.New(langs.EN_US, t)
+//	    assert.Equal(a, "golang", "golang", "strings should be equal")
 //	}
 func New(lang langs.Lang, t testing.TB) *Assert {
 	return &Assert{
@@ -141,6 +152,31 @@ func NoError(a *Assert, err error, msg ...string) {
 		a.t.Errorf("\n%s %s%s\n\t%s %s %v\n", iconError, translate(a, "fail_err"), m, iconGot, translate(a, "err"), err)
 	} else {
 		a.t.Logf("%s %s", iconPass, translate(a, "succ_err"))
+	}
+}
+
+// Error fails the test if the error interface is nil.
+func Error(a *Assert, err error, msg ...string) {
+	a.t.Helper()
+
+	if err == nil {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s%s\n", iconFail, translate(a, "fail_expected_err"), m)
+	} else {
+		a.t.Logf("%s %s: %v", iconPass, translate(a, "succ_expected_err"), err)
+	}
+}
+
+// ErrorIs verifies if the provided error matches the target error using [errors.Is].
+func ErrorIs(a *Assert, err, target error, msg ...string) {
+	a.t.Helper()
+
+	if !errors.Is(err, target) {
+		m := formatMessage(a, msg)
+		a.t.Errorf("\n%s %s%s\n\t%s %s %v\n\t%s %s %v\n",
+			iconFail, translate(a, "fail_err_is"), m, iconWant, translate(a, "target"), target, iconGot, translate(a, "err"), err)
+	} else {
+		a.t.Logf("%s %s", iconPass, translate(a, "succ_err_is"))
 	}
 }
 
