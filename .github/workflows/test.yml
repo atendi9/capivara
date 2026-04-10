@@ -1,0 +1,28 @@
+name: Run Capivara Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: 
+
+jobs:
+  test:
+    name: Test on Go 1.26.1
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go 1.26.1
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.1'
+          cache: true 
+
+      - name: Run tests
+        run: go test -v ./...
