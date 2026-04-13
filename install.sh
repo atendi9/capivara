@@ -5,14 +5,18 @@ INSTALL_DIR="$HOME/.local/bin"
 PATH_ENTRY="export PATH=\"$INSTALL_DIR:\$PATH\""
 
 if ! command -v go &> /dev/null; then
+    echo "Erro: Go não está instalado."
     exit 1
 fi
 
 if ! command -v git &> /dev/null; then
+    echo "Erro: Git não está instalado."
     exit 1
 fi
 
-mkdir -p "$INSTALL_DIR"
+if [ ! -d "$INSTALL_DIR" ]; then
+    mkdir -p "$INSTALL_DIR"
+fi
 
 TEMP_PATH=$(mktemp -d)
 cd "$TEMP_PATH"
