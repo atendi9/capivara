@@ -34,7 +34,7 @@ func main() {
 
 	r := runner.New(language, execCommand)
 
-	r.Execute()
+	r.AutoExecute()
 }
 
 func execCommand(cmd string, args ...string) runner.Exec {

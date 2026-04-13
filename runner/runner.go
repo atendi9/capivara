@@ -1,4 +1,4 @@
-// Package runner provides functionality to execute Go tests and parse their JSON output.
+// Package runner provides functionality to execute Go and Node.js tests and parse their output.
 package runner
 
 import (
@@ -22,46 +22,91 @@ const (
 // translations is the internal dictionary that maps output messages
 // according to the configured language.
 var translations = map[langs.Lang]map[string]string{
-    langs.EN_US: {
-        "err_capture":      "Error capturing output:",
-        "err_start":        "Error starting tests:",
-        "pkg_fail":         "PACKAGE FAILED:",
-        "success":          "[SUCCESS]",
-        "fail":             "[FAILED]",
-        "coverage_summary": "COVERAGE SUMMARY",
-    },
-    langs.PT_BR: {
-        "err_capture":      "Erro ao capturar saída:",
-        "err_start":        "Erro ao iniciar testes:",
-        "pkg_fail":         "PACOTE FALHOU:",
-        "success":          "[SUCESSO]",
-        "fail":             "[FALHOU]",
-        "coverage_summary": "RESUMO DE COBERTURA",
-    },
-    langs.RU: {
-        "err_capture":      "Ошибка при захвате вывода:",
-        "err_start":        "Ошибка при запуске тестов:",
-        "pkg_fail":         "ОШИБКА ПАКЕТА:",
-        "success":          "[УСПЕХ]",
-        "fail":             "[ОШИБКА]",
-        "coverage_summary": "ОТЧЕТ О ПОКРЫТИИ",
-    },
-    langs.JAP: {
-        "err_capture":      "出力のキャプチャエラー:",
-        "err_start":        "テスト開始エラー:",
-        "pkg_fail":         "パッケージ失敗:",
-        "success":          "[成功]",
-        "fail":             "[失敗]",
-        "coverage_summary": "カバレッジ概要",
-    },
-    langs.CH: {
-        "err_capture":      "捕获输出错误：",
-        "err_start":        "启动测试错误：",
-        "pkg_fail":         "包失败：",
-        "success":          "[成功]",
-        "fail":             "[失败]",
-        "coverage_summary": "覆盖率摘要",
-    },
+	langs.EN_US: {
+		"err_capture":      "Error capturing output:",
+		"err_start":        "Error starting tests:",
+		"pkg_fail":         "PACKAGE FAILED:",
+		"success":          "[SUCCESS]",
+		"fail":             "[FAILED]",
+		"coverage_summary": "COVERAGE SUMMARY",
+		"detect_go":        "Go project detected!",
+		"detect_node":      "Node.js project detected!",
+		"info_detect":      "Multiple projects detected.",
+		"err_not_found":    "No supported project found (go.mod or package.json missing).",
+		"error":            "Error",
+        "file":             "File",
+        "expected":         "Expected",
+        "actual":           "Actual",
+        "test_failed":      "Test Failed",
+	},
+	langs.PT_BR: {
+		"err_capture":      "Erro ao capturar saída:",
+		"err_start":        "Erro ao iniciar testes:",
+		"pkg_fail":         "PACOTE FALHOU:",
+		"success":          "[SUCESSO]",
+		"fail":             "[FALHOU]",
+		"coverage_summary": "RESUMO DE COBERTURA",
+		"detect_go":        "Projeto Go detectado!",
+		"detect_node":      "Projeto Node.js detectado!",
+		"info_detect":      "Múltiplos projetos detectados.",
+		"err_not_found":    "Nenhum projeto suportado encontrado (go.mod ou package.json ausente).",
+		"error":            "Erro",
+        "file":             "Arquivo",
+        "expected":         "Esperado",
+        "actual":           "Obtido", 
+        "test_failed":      "Teste Falhou",
+	},
+	langs.RU: {
+		"err_capture":      "Ошибка при захвате вывода:",
+		"err_start":        "Ошибка при запуске тестов:",
+		"pkg_fail":         "ОШИБКА ПАКЕТА:",
+		"success":          "[УСПЕХ]",
+		"fail":             "[ОШИБКА]",
+		"coverage_summary": "ОТЧЕТ О ПОКРЫТИИ",
+		"detect_go":        "Обнаружен проект Go!",
+		"detect_node":      "Обнаружен проект Node.js!",
+		"info_detect":      "Обнаружено несколько проектов.",
+		"err_not_found":    "Поддерживаемый проект не найден (отсутствует go.mod или package.json).",
+		"error":            "Ошибка",
+        "file":             "Файл",
+        "expected":         "Ожидалось",
+        "actual":           "Фактически",
+        "test_failed":      "Тест не пройден",
+	},
+	langs.JAP: {
+		"err_capture":      "出力のキャプチャエラー:",
+		"err_start":        "テスト開始エラー:",
+		"pkg_fail":         "パッケージ失敗:",
+		"success":          "[成功]",
+		"fail":             "[失敗]",
+		"coverage_summary": "カバレッジ概要",
+		"detect_go":        "Goプロジェクトを検出しました！",
+		"detect_node":      "Node.jsプロジェクトを検出しました！",
+		"info_detect":      "複数のプロジェクトが検出されました。",
+		"err_not_found":    "サポートされているプロジェクトが見つかりません (go.modまたはpackage.jsonがありません)。",
+		"error":            "エラー",
+        "file":             "ファイル",
+        "expected":         "期待値",
+        "actual":           "実際",
+        "test_failed":      "テスト失敗",
+	},
+	langs.CH: {
+		"err_capture":      "捕获输出错误：",
+		"err_start":        "启动测试错误：",
+		"pkg_fail":         "包失败：",
+		"success":          "[成功]",
+		"fail":             "[失败]",
+		"coverage_summary": "覆盖率摘要",
+		"detect_go":        "检测到 Go 项目！",
+		"detect_node":      "检测到 Node.js 项目！",
+		"info_detect":      "检测到多个项目。",
+		"err_not_found":    "未找到支持的项目 (缺少 go.mod 或 package.json)。",
+		"error":            "错误",
+        "file":             "文件",
+        "expected":         "预期",
+        "actual":           "实际",
+        "test_failed":      "测试失败",
+	},
 }
 
 // TestEvent represents the JSON generated by the `go test -json` command.
@@ -88,13 +133,55 @@ type CommandFn func(cmd string, args ...string) Exec
 type Runner struct {
 	lang      langs.Lang
 	fn        CommandFn
-	coverages map[string]string 
-}
+	coverages map[string]string
 
+	isFailing    bool
+	failName     string
+	failExpected string
+	failActual   string
+	failOperator string
+	failFile     string
+	failMessage  string
+}
 
 // New initializes a new test Runner instance.
 func New(lang langs.Lang, fn CommandFn) *Runner {
 	return &Runner{lang: lang, fn: fn, coverages: make(map[string]string)}
+}
+
+// AutoExecute detects the project's language based on the root files
+// and calls the appropriate executor.
+func (r *Runner) AutoExecute() {
+	isGo := fileExists("go.mod")
+	isNode := fileExists("package.json")
+
+	if isGo && isNode {
+		fmt.Printf("🔍 %s ...\n", translate(r.lang, "info_detect"))
+	}
+
+	if isGo {
+		fmt.Printf("🐹 %s\n", translate(r.lang, "detect_go"))
+		r.Execute()
+		return
+	}
+
+	if isNode {
+		fmt.Printf("📦 %s\n", translate(r.lang, "detect_node"))
+		r.ExecuteNode()
+		return
+	}
+
+	fmt.Printf("\n%s %s\n", iconError, translate(r.lang, "err_not_found"))
+	os.Exit(1)
+}
+
+// fileExists is a helper to check if a file exists in the current directory.
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
 
 // Execute runs the go test command with JSON output and parses the stream.
@@ -166,19 +253,193 @@ func (r *Runner) processEvent(e TestEvent) {
 	}
 }
 
-func (r *Runner) printCoverageSummary() {
-    if len(r.coverages) == 0 {
+// ExecuteNode runs Node.js tests, forcing output in TAP format.
+func (r *Runner) ExecuteNode() {
+	args := []string{"--test", "--test-reporter=tap"}
+	cmd := r.fn("node", args...)
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		fmt.Printf("%s %s %v\n", iconError, translate(r.lang, "err_capture"), err)
+		os.Exit(1)
+	}
+
+	if err := cmd.Start(); err != nil {
+		fmt.Printf("%s %s %v\n", iconError, translate(r.lang, "err_start"), err)
+		os.Exit(1)
+	}
+
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		line := scanner.Text()
+		r.processNodeEvent(line)
+	}
+
+	r.printPendingNodeFailure()
+
+	err = cmd.Wait()
+	if err != nil {
+		os.Exit(1)
+	}
+}
+
+// processNodeEvent parses the TAP format generated by Node line by line.
+func (r *Runner) processNodeEvent(line string) {
+	trimmedLine := strings.TrimSpace(line)
+
+	if strings.Contains(line, "MODULE_TYPELESS_PACKAGE_JSON") ||
+		strings.Contains(line, "Reparsing as ES module") ||
+		strings.Contains(line, "To eliminate this warning") ||
+		strings.Contains(line, "node --trace-warnings") {
+		return
+	}
+
+	if strings.HasPrefix(trimmedLine, "ok ") || strings.HasPrefix(trimmedLine, "not ok ") {
+		r.printPendingNodeFailure()
+
+		isPass := strings.HasPrefix(trimmedLine, "ok ")
+		parts := strings.SplitN(trimmedLine, "-", 2)
+		testName := ""
+		timeStr := ""
+
+		if len(parts) > 1 {
+			infoParts := strings.Split(parts[1], "#")
+			testName = strings.TrimSpace(infoParts[0])
+
+			if len(infoParts) > 1 && strings.Contains(infoParts[1], "time=") {
+				timeRaw := strings.Split(infoParts[1], "=")
+				if len(timeRaw) > 1 {
+					timeStr = strings.TrimSpace(timeRaw[1])
+				}
+			}
+		}
+
+		if isPass {
+			fmt.Printf("%s %s %s (%s)\n", iconPass, translate(r.lang, "success"), testName, timeStr)
+			r.isFailing = false
+		} else {
+			fmt.Printf("%s %s %s (%s)\n", iconFail, translate(r.lang, "fail"), testName, timeStr)
+			r.isFailing = true
+			r.failName = testName
+			r.failExpected = ""
+			r.failActual = ""
+			r.failOperator = ""
+			r.failFile = ""
+			r.failMessage = ""
+		}
+		return
+	}
+
+	if r.isFailing {
+		if after, ok := strings.CutPrefix(trimmedLine, "expected:"); ok {
+			r.failExpected = strings.TrimSpace(after)
+		} else if after0, ok0 := strings.CutPrefix(trimmedLine, "actual:"); ok0 {
+			r.failActual = strings.TrimSpace(after0)
+		} else if after1, ok1 := strings.CutPrefix(trimmedLine, "operator:"); ok1 {
+			r.failOperator = strings.TrimSpace(after1)
+			r.failOperator = strings.ReplaceAll(r.failOperator, "'", "")
+		} else if after2, ok2 := strings.CutPrefix(trimmedLine, "name:"); ok2 {
+			r.failMessage = strings.TrimSpace(after2)
+			r.failMessage = strings.ReplaceAll(r.failMessage, "'", "")
+		} else if r.failFile == "" && (strings.Contains(trimmedLine, ".ts:") || strings.Contains(trimmedLine, ".js:")) {
+			start := strings.Index(trimmedLine, "(")
+			end := strings.Index(trimmedLine, ")")
+			if start != -1 && end != -1 && end > start {
+				path := trimmedLine[start+1 : end]
+				if !strings.HasPrefix(path, "node:") {
+					r.failFile = path
+				}
+			} else {
+				parts := strings.FieldsSeq(trimmedLine)
+				for p := range parts {
+					if strings.Contains(p, ".ts:") || strings.Contains(p, ".js:") {
+						r.failFile = strings.Trim(p, "()")
+						break
+					}
+				}
+			}
+		}
+
+		if trimmedLine == "..." {
+			r.printPendingNodeFailure()
+		}
+		return
+	}
+
+	noisePrefixes := []string{
+		"TAP version", "1..", "# Subtest:",
+		"# tests", "# suites", "# pass", "# fail", "# cancelled",
+		"# skipped", "# todo", "# duration_ms",
+		"---", "...", "duration_ms:", "type:", "location:",
+		"failureType:", "exitCode:", "signal:", "error:", "code:",
+	}
+
+	for _, prefix := range noisePrefixes {
+		if strings.HasPrefix(trimmedLine, prefix) {
+			return
+		}
+	}
+
+	if strings.HasPrefix(strings.TrimSpace(line), "#") {
+		line = strings.Replace(line, "#", "", 1)
+	}
+
+	if strings.TrimSpace(line) != "" {
+		fmt.Println(line)
+	}
+}
+
+// printPendingNodeFailure formats and outputs the details of a failing Node.js test,
+// replacing the absolute working directory path with a relative dot.
+func (r *Runner) printPendingNodeFailure() {
+    if !r.isFailing {
         return
     }
 
-    fmt.Println("\n==========================================================================")
-    fmt.Printf("📊 %s\n", translate(r.lang, "coverage_summary"))
-    fmt.Println("==========================================================================")
-    
-    for pkg, cov := range r.coverages {
-        fmt.Printf("%-30s -> %s\n", pkg, cov)
+    errorDetails := ""
+    if r.failMessage != "" {
+        errorDetails += r.failMessage
     }
-    fmt.Println("==========================================================================")
+
+    if r.failExpected != "" && r.failActual != "" {
+        op := "!=="
+        if r.failOperator != "" {
+            op = r.failOperator
+        }
+        if errorDetails != "" {
+            errorDetails += " -> "
+        }
+        errorDetails += fmt.Sprintf("%s: %s %s %s: %s", translate(r.lang, "expected"), r.failExpected, op, translate(r.lang, "actual"), r.failActual)
+    } else if errorDetails == "" {
+        errorDetails = translate(r.lang, "test_failed")
+    }
+
+    fmt.Printf("   ↳ 🛑 %s: %s\n", translate(r.lang, "error"), errorDetails)
+    if r.failFile != "" {
+        cwd, err := os.Getwd()
+        if err == nil && cwd != "" {
+            r.failFile = strings.Replace(r.failFile, cwd, ".", 1)
+        }
+        fmt.Printf("   ↳ 📂 %s:  %s\n", translate(r.lang, "file"), r.failFile)
+    }
+
+    r.isFailing = false
+}
+
+// printCoverageSummary formats and prints the collected coverage data.
+func (r *Runner) printCoverageSummary() {
+	if len(r.coverages) == 0 {
+		return
+	}
+
+	fmt.Println("\n==========================================================================")
+	fmt.Printf("📊 %s\n", translate(r.lang, "coverage_summary"))
+	fmt.Println("==========================================================================")
+
+	for pkg, cov := range r.coverages {
+		fmt.Printf("%-30s -> %s\n", pkg, cov)
+	}
+	fmt.Println("==========================================================================")
 }
 
 // translate is an internal helper function that fetches the localized text.
@@ -188,6 +449,5 @@ func translate(lang langs.Lang, key string) string {
 			return msg
 		}
 	}
-	// Safety fallback to English
 	return translations[langs.EN_US][key]
 }

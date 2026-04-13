@@ -6,7 +6,7 @@
 
 You can easily install Capivara globally for your user without needing administrative or root privileges. The scripts below will download the source, build the binary, and place it in your local user directory (`~/.local/bin`).
 
-> **Note:** Ensure you have [Go](https://go.dev/doc/install) and Git installed on your system before running these scripts.
+> **Note:** Ensure you have [Go](https://go.dev/doc/install) and Git installed on your system to build Capivara. To execute tests, you will also need Go and/or [Node.js](https://nodejs.org/pt-br/download) installed on your machine depending on your project.
 
 ### 🍎 macOS and 🐧 Linux
 
@@ -25,12 +25,19 @@ Invoke-RestMethod -Uri https://raw.githubusercontent.com/atendi9/capivara/main/i
 
 ## 🚀 Usage
 
-Capivara acts as a wrapper around the standard `go test` command. By default, the output is in English. 
+Capivara is a smart test runner wrapper that automatically detects your project's language based on the presence of a `go.mod` (Go) or `package.json` (Node.js) file. It wraps around standard testing commands (`go test` and `node --test`) to provide a cleaner, localized output. By default, the output is in English. 
 
-To run your tests with Capivara, navigate to your Go project and run:
+To run your tests with Capivara, navigate to your project's root directory and run:
 
+**For Go projects:**
 ```bash
 capivara ./...
+```
+*(Any standard `go test` flags can still be passed alongside it!)*
+
+**For Node.js projects:**
+```bash
+capivara
 ```
 
 ### 🇧🇷 Portuguese Output
@@ -64,5 +71,3 @@ If you prefer to see the test results and error messages in Chinese, you can use
 ```bash
 capivara --lang=chinese ./...
 ```
-
-*(Any standard `go test` flags can still be passed alongside it!)*
