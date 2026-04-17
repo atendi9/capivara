@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"io"
 	"testing"
+
+	"github.com/atendi9/capivara/assert"
 	"github.com/atendi9/capivara/langs"
 )
 
@@ -38,9 +40,7 @@ func TestTranslate(t *testing.T) {
 
 	for _, tt := range tests {
 		result := translate(tt.lang, tt.key)
-		if tt.expected != "" && result != tt.expected {
-			t.Errorf("expected %s, got %s", tt.expected, result)
-		}
+		assert.Equal(t, tt.expected, result)
 	}
 }
 
