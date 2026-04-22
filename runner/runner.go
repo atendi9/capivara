@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	iconSkipped = "⏭️"
 	iconError   = "🔥"
 	iconFailPkg = "💥"
 	iconPass    = "🚀"
@@ -52,6 +53,9 @@ type Runner struct {
 	failOperator string
 	failFile     string
 	failMessage  string
+	passCount    int
+	failCount    int
+	skipCount    int
 }
 
 // New creates and returns a Runner instance pointing to the specified language environment and command function.
@@ -124,6 +128,7 @@ func (r *Runner) Execute() {
 	}
 
 	r.printCoverageSummary()
+	r.printExecutionSummary()
 
 	err = cmd.Wait()
 	if err != nil {
@@ -144,8 +149,10 @@ func (r *Runner) processEvent(e TestEvent) {
 		if strings.HasPrefix(trimmedText, "=== RUN") ||
 			strings.HasPrefix(trimmedText, "--- PASS") ||
 			strings.HasPrefix(trimmedText, "--- FAIL") ||
+			strings.HasPrefix(trimmedText, "--- SKIP") ||
 			strings.HasPrefix(trimmedText, "PASS") ||
 			strings.HasPrefix(trimmedText, "FAIL") ||
+			strings.HasPrefix(trimmedText, "SKIP") ||
 			strings.HasPrefix(trimmedText, "ok") ||
 			strings.HasPrefix(trimmedText, "?") {
 			return
@@ -167,9 +174,15 @@ func (r *Runner) processEvent(e TestEvent) {
 	switch e.Action {
 	case "pass":
 		fmt.Printf("\n%s %s %s (%.2fs)\n", iconPass, translate(r.lang, "success"), e.Test, e.Elapsed)
+		r.passCount++
 		r.printTestLogs(e.Test)
 	case "fail":
 		fmt.Printf("\n%s %s %s (%.2fs)\n", iconFail, translate(r.lang, "fail"), e.Test, e.Elapsed)
+		r.failCount++
+		r.printTestLogs(e.Test)
+	case "skip":
+		fmt.Printf("\n%s  %s %s (%.2fs)\n", iconSkipped, translate(r.lang, "skip"), e.Test, e.Elapsed)
+		r.skipCount++
 		r.printTestLogs(e.Test)
 	}
 }
@@ -206,6 +219,7 @@ func (r *Runner) ExecuteNode() {
 	}
 
 	r.printPendingNodeFailure()
+	r.printExecutionSummary()
 
 	err = cmd.Wait()
 	if err != nil {
@@ -227,6 +241,7 @@ func (r *Runner) processNodeEvent(line string) {
 		r.printPendingNodeFailure()
 
 		isPass := strings.HasPrefix(trimmedLine, "ok ")
+		isSkip := strings.Contains(strings.ToUpper(trimmedLine), "# SKIP")
 		parts := strings.SplitN(trimmedLine, "-", 2)
 		testName := ""
 		timeStr := ""
@@ -243,11 +258,17 @@ func (r *Runner) processNodeEvent(line string) {
 			}
 		}
 
-		if isPass {
+		if isSkip {
+			fmt.Printf("%s %s %s (%s)\n", iconSkipped, translate(r.lang, "skip"), testName, timeStr)
+			r.skipCount++
+			r.isFailing = false
+		} else if isPass {
 			fmt.Printf("%s %s %s (%s)\n", iconPass, translate(r.lang, "success"), testName, timeStr)
+			r.passCount++
 			r.isFailing = false
 		} else {
 			fmt.Printf("%s %s %s (%s)\n", iconFail, translate(r.lang, "fail"), testName, timeStr)
+			r.failCount++
 			r.isFailing = true
 			r.failName = testName
 			r.failExpected = ""
@@ -365,6 +386,17 @@ func (r *Runner) printCoverageSummary() {
 	for pkg, cov := range r.coverages {
 		fmt.Printf("%-30s -> %s\n", pkg, cov)
 	}
+	fmt.Println("==========================================================================")
+}
+
+// printExecutionSummary outputs the final tally of passed, skipped, and failed tests.
+func (r *Runner) printExecutionSummary() {
+	fmt.Println("\n==========================================================================")
+	fmt.Printf("%s\n", translate(r.lang, "execution_summary"))
+	fmt.Println("==========================================================================")
+	fmt.Printf("%s: %d\t", translate(r.lang, "success"), r.passCount)
+	fmt.Printf("%s: %d\t", translate(r.lang, "skip"), r.skipCount)
+	fmt.Printf("%s: %d\t\n", translate(r.lang, "fail"), r.failCount)
 	fmt.Println("==========================================================================")
 }
 
